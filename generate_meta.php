@@ -46,6 +46,10 @@ try {
         $metaTemplate = file_get_contents(__DIR__ . '/templates/phpstorm.meta.php.tpl');
         $modelTemplate = file_get_contents(__DIR__ . '/templates/model.php.tpl');
 
+        if (is_file(__DIR__ . '/templates/phpstorm.meta.all.php.tpl')){
+            $allTemplate = file_get_contents(__DIR__ . '/templates/phpstorm.meta.all.php.tpl');
+        }
+
         // 准备替换变量
         $className = ($table) . $config['modelSuffix'];
         
@@ -108,6 +112,27 @@ try {
         // 写入文件
         file_put_contents($dirPath . '/.phpstorm.meta.php', $metaContent);
         file_put_contents($dirPath . '/' . $className . '.php', $modelContent);
+
+    }
+
+    
+    if (!empty($allTemplate)){
+        // 生成语言选项配置
+        $table_list = "'" . implode("',\n'", $tables) . "'";
+
+        // 替换语言选项模板中的变量
+        $allContent = str_replace(
+            ['{{table_list}}'],
+            [$table_list],
+            $allTemplate
+        );
+
+        $date = date('Y-m-d--H-i-s');
+        $allTableDirPath = $targetDir . "/all-table-{$date}";
+        if (!file_exists($allTableDirPath)) {
+            mkdir($allTableDirPath, 0777, true);
+        }
+        file_put_contents($allTableDirPath . '/.phpstorm.meta.php', $allContent);
     }
 
     echo "元数据文件生成成功！\n";
