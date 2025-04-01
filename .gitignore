@@ -1,6 +1,7 @@
 config.php
 /templates/model.php.tpl
 /templates/phpstorm.meta.php.tpl
+/templates/phpstorm.meta.all.php.tpl
 .vscode
 .history
 .idea
