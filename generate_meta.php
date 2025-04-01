@@ -24,7 +24,8 @@ if (is_dir($targetDir)) {
 
 try {
     // 连接数据库
-    $dsn = "mysql:host={$config['host']};dbname={$config['dbname']};charset={$config['charset']}";
+    $dbName = $config['dbname'];
+    $dsn = "mysql:host={$config['host']};dbname={$dbName};charset={$config['charset']}";
     $pdo = new PDO($dsn, $config['username'], $config['password']);
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
@@ -40,7 +41,26 @@ try {
         }
 
         // 获取表的所有字段信息
+
         $columns = $pdo->query("SHOW COLUMNS FROM `$table`")->fetchAll(PDO::FETCH_ASSOC);
+
+        $columnsCommentList = [];
+        try{
+            
+            $stmt = $pdo->prepare("
+                SELECT COLUMN_NAME, COLUMN_COMMENT 
+                FROM information_schema.columns 
+                WHERE table_schema = :db_name 
+                AND table_name = :table
+            ");
+            $stmt->bindParam(':table', $table, PDO::PARAM_STR);
+            $stmt->bindParam(':db_name', $dbName, PDO::PARAM_STR);
+            $stmt->execute();
+            $columnsCommentList = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            $columnsCommentList = array_column($columnsCommentList, 'COLUMN_COMMENT', 'COLUMN_NAME');
+        }catch(\Exception $e){
+
+        }
 
         // 读取模板文件
         $metaTemplate = file_get_contents(__DIR__ . '/templates/phpstorm.meta.php.tpl');
@@ -88,7 +108,7 @@ try {
                 $nullableStr = '|null';
             }
 
-            $comment = $column['Comment']??'';
+            $comment = $columnsCommentList[$column['Field']??'']??'';
             $propertyDocs .= " * @property {$phpType}{$nullableStr} {$column['Field']} {$comment}\n";
             // $properties .= "    product \${$column['Field']};\n";
         }
