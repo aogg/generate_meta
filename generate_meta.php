@@ -101,6 +101,27 @@ try {
                 default:
                     $phpType = 'string';
             }
+
+            if (!empty($config['append'])){
+
+                foreach ($config['append'] as $appendItem){
+                    if (empty($appendItem)){
+                        continue;
+                    }
+
+                    if (!in_array($column['Type'], $appendItem['type'])){
+                        continue;
+                    }
+
+                    $newPro = call_user_func($appendItem['field'], $column['Field']);
+
+                    if (empty($newPro)){
+                        continue;
+                    }
+
+                    $propertyDocs .= " * @property-read {$appendItem['type_result']} {$newPro}\n";
+                }
+            }
             
             // 判断字段是否允许为空
             $nullableStr = '';
